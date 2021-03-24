@@ -1,522 +1,411 @@
 from tkinter import *
 from tkinter import ttk, messagebox
 from code import *
+from m_simplifiedDES import *
+from m_blocks_fill import *
+from m_CBCmode import *
+from ttkthemes import ThemedStyle
+from tkinter import ttk, scrolledtext
+import tkinter as tk
 import datetime
 
-#****************************************INICIO METODOS GUI*************************
+#*******************MISCELANEA----------------------------------
 
-#Funcion que se ejecuta al pulsar el boton de cifrar
-def fnOnCifrar():
-    errores_entrada(1)
+#Variables de tema seleccionables
+THEME2 = "equilux"
+THEME1 = "aquativo"
+
+#Funcion que cambia el tema de Claro a Oscuro y de Oscuro a Claro
+def changeTheme(root):
+    if(currentTheme.get()==THEME1):
+        style.theme_use(THEME2)
+        currentTheme.set(THEME2)
+    else:
+        style.theme_use(THEME1)
+        currentTheme.set(THEME1)
+
+#*******************PRACTICA 1 CIFRADO DES SIMPLIFICADO METODOS GUI----------------------------------
+
+#Funcion que se ejecuta al pulsar el boton de cifrar 
+def fnOnEncrypt():
+    message = txt1f1tab1.get()
+    cipherKey = txt2f1tab1.get()
+    try:
+        if(inputErrors("message", message) == 0 and inputErrors("cipherkey", cipherKey) == 0):
+            iterations=8
+            try:
+                (encryptedMessage, dictIntermediateValues)= simplifiedDES_EncryptGUI(message, cipherKey, iterations)
+            except TypeError as e:
+                messagebox.showerror("Error", e)
+            resetIntermediateValuesGUI(1)
+            setSubkeyListOnGUI(1,cipherKey, iterations)
+            setFasesOnGui(1,dictIntermediateValues)
+            txt1f4tab1.insert(0,encryptedMessage)
+    except (ValueError,TypeError) as e:
+        messagebox.showerror("Error", e)
 
 #Funcion que se ejecuta al pulsar el boton de Descifrar
-def fnOnDescifrar():
-    errores_entrada(2)
-    
+def fnOnDecrypt():
+    encryptedMessage = txt1f1tab1.get()
+    cipherKey = txt2f1tab1.get()
+    try:
+        if(inputErrors("message", encryptedMessage) == 0 and inputErrors("cipherkey", cipherKey) == 0):
+            iterations=8
+            try:
+                (encryptedMessage, dictIntermediateValues)= simplifiedDES_DecryptGUI(encryptedMessage, cipherKey, iterations)
+            except TypeError as e:
+                messagebox.showerror("Error", e)
+            resetIntermediateValuesGUI(1)
+            setSubkeyListOnGUI(1, cipherKey, iterations)
+            setFasesOnGui(1, dictIntermediateValues)
+            txt1f4tab1.insert(0,encryptedMessage)
+    except (ValueError,TypeError) as e:
+        messagebox.showerror("Error", e)
+
 #Funcion que se ejecuta al pulsar el boton de ataque por fuerza bruta
-def fnOnBruteForce():
-    errores_entrada2()
-
-#Funcion para la pantalla de Cifrar/Descifrar que validara los campos mensaje y clave
-#y si falla la validacion informara al usuario mediante ventanas que informen de dichos
-#errores. Si los valores son validos ejecuta el algoritmo de Cifrar/Descifrar. Y completa
-#los valores de la GUI.
-def errores_entrada(cifrado):
-    reset(1) #reseteo de valores de la GUI
-    b1erroresmensaje = [] #errores en el mensaje
-    b1erroresclave = [] #errores en la clave
-    errormensaje=False #variable de control de errores en el mensaje
-    errorclave=False #variable de control de errores en la clave
-
-    # CONTROL DE ERRORES
-    
-    #Campo mensaje vacio
-    if(txt1f1tab1.get()==""):
-        errormensaje=True 
-        b1erroresmensaje.append(" No se ha introducido ningún mensaje")
-
-    #Campo mensaje en base no binaria
-    if(txt1f1tab1.get().count("0")+txt1f1tab1.get().count("1")!=len(txt1f1tab1.get())):
-        errormensaje=True
-        b1erroresmensaje.append(" Base binaria, solo valen el 0 y el 1")
-
-    #Campo mensaje con extension no permitida
-    if(len(txt1f1tab1.get())!=12):
-        errormensaje=True
-        b1erroresmensaje.append(" El mensaje no es de 12 bits")
-    
-    # CLAVE
-    #Campo clave vacio
-    if(txt2f1tab1.get()==""):
-        errorclave=True 
-        b1erroresclave.append(" No se ha introducido ninguna clave")
-   
-    #Campo clave en base no binaria
-    if(txt2f1tab1.get().count("0")+txt2f1tab1.get().count("1")!=len(txt2f1tab1.get())):
-        errorclave=True
-        b1erroresclave.append(" Base binaria, solo valen el 0 y el 1")
-   
-    #Campo clave con extension no valida
-    if(len(txt2f1tab1.get())!=9):
-        errorclave=True
-        b1erroresclave.append(" La clave no es de 9 bits")
-   
-    #Manejo de errores
-    if(errormensaje or errorclave):
-        stringerrores = ""
-        if(errormensaje):
-            stringerrores += "Mensaje: "+'.'.join(b1erroresmensaje)+"\n"
-        if(errorclave):
-            stringerrores += "Clave: "+'.'.join(b1erroresclave)+"."
-        messagebox.showerror('Errores', stringerrores)
-    #Control de funcionamiento sin errores
+def fnBruteForce():
+    encryptedMessage = txt1f1tab2.get()
+    originalMessage = txt2f1tab2.get()
+    try:
+        if(inputErrors("message", encryptedMessage) == 0 and inputErrors("message", originalMessage) == 0):
+            iterations=8
+            try:
+                (cipherKey, found, time, dictIntermediateValues)= bruteForce_simplifiedDESGUI(originalMessage, encryptedMessage, iterations)
+            except TypeError as e:
+                messagebox.showerror("Error", e)
+            if(found):                
+                resetIntermediateValuesGUI(2)
+                setSubkeyListOnGUI(2, cipherKey, iterations)
+                setFasesOnGui(2, dictIntermediateValues)
+            else:
+                resetIntermediateValuesGUI(2)
+                raise ValueError("No existe clave que desencripte el mensaje cifrado y lo convierta en el mensaje original.")
+            txt1f4tab2.insert(0,encryptedMessage)
+    except (ValueError,TypeError) as e:
+        messagebox.showerror("Error", e)
+    txt1f4tab2.insert(0, cipherKey)
+    if(found):
+        txt2f4tab2.insert(0, time[0:6]+"ms")
     else:
-        mensaje = txt1f1tab1.get()
-        clave = txt2f1tab1.get()
+        txt2f4tab2.insert(0, time)
 
-        listasubclaves = []
-        # generacion de subclaves
-        listasubclaves = subclaves(clave, cifrado)
+"""
+Funcion de reset, resetea los valores para que la salida en la interfaz sea
+independiente en cada ejecucion del cifrado/descifrado/ataque.
+Si el parametro tab es 1 significa que el reset se producira en la pantalla Cifrar/Descifrar.
+Si el parametro tab es 2 significa que el reset se producira en la pantalla BruteForce
+"""
+def resetIntermediateValuesGUI(tab):
+    resetSubKeyListGUI(tab)
+    resetFasesGUI(tab)
+    resetResultGUI(tab)
 
-        # escritura de subclaves
-        for i in range(len(listasubclaves)):
-            listbtxttab1[i].insert(0, listasubclaves[i])
-
-        if(cifrado==1):
-            # Ejecucion algoritmo de cifrado
-            txt1f4tab1.insert(0, TestcifradoDESsimplificado(mensaje, clave, 8, 1))
-            txt1f4tab1.place(x=350, y=10)
-            varres.set("Mensaje Cifrado")
-            lbl1f4tab1.place(x=140, y=10)
-        elif(cifrado==2):
-            # Ejecucion algoritmo de descifrado
-            txt1f4tab1.insert(0, TestDescifradoDESsimplificado(mensaje, clave, 8, 1))
-            txt1f4tab1.place(x=350, y=10)
-            varres.set("Mensaje Descifrado")
-            lbl1f4tab1.place(x=100, y=10)
-
-#Funcion para la pantalla de Bruteforce que validara los campos mensaje original y mensaje cifrado
-#y si falla la validacion informara al usuario mediante ventanas que informen de dichos
-#errores. Si los valores son validos ejecuta el algoritmo de Bruteforce. Y completa
-#los valores de la GUI.
-def errores_entrada2():
-    reset(2) # Reseteo de valores de la GUI
-    b1erroresoriginal = [] #Errores en el mensaje original
-    b1errorescifrado = [] #Errores en el mensaje cifrado
-    errororiginal=False #Variable de control de errores en el mensaje original
-    errorcifrado=False #Variable de control de errores en el mensaje cifrado
-
-    #CONTROL DE ERRORES
-
-    #MENSAJE ORIGINAL
-
-    #Campo mensaje original vacio
-    if(txt1f1tab2.get()==""):
-        errororiginal=True 
-        b1erroresoriginal.append(" No se ha introducido ningún mensaje")
-
-    #Campo mensaje original en base no binaria
-    if(txt1f1tab2.get().count("0")+txt1f1tab2.get().count("1")!=len(txt1f1tab2.get())):
-        errororiginal=True
-        b1erroresoriginal.append(" Base binaria, solo valen el 0 y el 1")
-
-    #Campo mensaje original con extension no permitida
-    if(len(txt1f1tab2.get())!=12):
-        errororiginal=True
-        b1erroresoriginal.append(" El mensaje no es de 12 bits")
-    
-    #MENSAJE CIFRADO
-
-    #Campo mensaje cifrado vacio
-    if(txt2f1tab2.get()==""):
-        errorcifrado=True 
-        b1errorescifrado.append(" No se ha introducido ningún mensaje")
-
-    #Campo mensaje cifrado en base no binaria
-    if(txt2f1tab2.get().count("0")+txt2f1tab2.get().count("1")!=len(txt2f1tab2.get())):
-        errorcifrado=True
-        b1errorescifrado.append(" Base binaria, solo valen el 0 y el 1")
-
-    #Campo mensaje cifrado con extension no permitida
-    if(len(txt2f1tab2.get())!=12):
-        errorcifrado=True
-        b1errorescifrado.append(" El mensaje no es de 12 bits")
-          
-    # Manejo de errores
-    if(errororiginal or errorcifrado):
-        stringerrores = ""
-        if(errororiginal):
-            stringerrores += "Mensaje original: "+'.'.join(b1erroresoriginal)+"\n"
-        if(errorcifrado):
-            stringerrores += "Mensaje cifrado: "+'.'.join(b1errorescifrado)+"."
-        messagebox.showerror('Errores', stringerrores)
-    #Control de funcionamiento sin errores
-    else:
-        mensajeoriginal = txt1f1tab2.get()
-        mensajecifrado = txt2f1tab2.get()
-
-        #Ejecucion del algoritmo de fuerza bruta 
-        [clave, encontrado, tiempo] = BruteForcedescifradoDESsimplificado(mensajeoriginal, mensajecifrado, 8)
-
-        txt1f4tab2.insert(0, clave)
-        txt2f4tab2.insert(0, tiempo)
-
-        txt1f4tab2.place(x=200, y=10)
-        lbl1f4tab2.place(x=100, y=10)
-
-        txt2f4tab2.place(x=500, y=10)
-        lbl2f4tab2.place(x=400, y=10)        
-
-        clave = txt1f4tab2.get()
-        if(encontrado):
-            #Ejecucion del cifrado con los datos encontrados para completar los campos intermedios de la ejecucion hallada
-            TestcifradoDESsimplificado(mensajeoriginal, clave, 8, 2)
-            cifrado=True
-            listasubclaves = []
-            #Generacion de subclaves
-            listasubclaves = subclaves(clave, cifrado)
-            #Escritura de subclaves
-            for i in range(len(listasubclaves)):
-                listbtxttab2[i].insert(0, listasubclaves[i])
-
-#Funcion de reset, resetea los valores para que la salida en la interfaz
-#sea independiente en cada ejecucion del cifrado/descifrado/ataque.
-#Si el parametro numero es 1 significa que el reset se producira en la pantalla Cifrar/Descifrar.
-#Si el parametro numero es 2 el reset se producira en la pantalla Bruteforce.
-def reset(numero):
-    if(numero==1):
-        i = 0
-        while(i < 8):
-            listbtxttab1[i].delete(0, "end")
-            i = i+1
-        i = 0
-        while(i < 24):
+#Funcion para resetear las fases del algoritmo de cifrado
+#Si el parametro tab es 1 significa que el reset se producira en la pantalla Cifrar/Descifrar.
+#Si el parametro tab es 2 significa que el reset se producira en la pantalla BruteForce
+def resetFasesGUI(tab):
+    if(tab==1):
+        for i in range(0, 24):
             listfasestxtf3tab1[i].delete(0, "end")
             i = i+1
-        txt1f4tab1.delete(0, "end")
-        txt1f4tab1.place(x=500, y=480)
-    elif(numero==2):
-        i=0
-        while(i < 8):
-            listbtxttab2[i].delete(0, "end")
-            i = i+1
-        i = 0
-        while(i < 24):
+    elif(tab==2):
+        for i in range(0, 24):
             listfasestxtf3tab2[i].delete(0, "end")
             i = i+1
+
+#Funcion para resetear el resultado del Cifrado/Descifrado/Fuerza Bruta
+#Si el parametro tab es 1 significa que el reset se producira en la pantalla Cifrar/Descifrar.
+#Si el parametro tab es 2 significa que el reset se producira en la pantalla BruteForce
+def resetResultGUI(tab):
+    if(tab==1):
+        txt1f4tab1.delete(0, "end")
+        txt1f4tab1.place(x=500, y=480)
+    elif(tab==2):
         txt1f4tab2.delete(0, "end")
-        txt1f4tab2.place(x=500, y=480)
         txt2f4tab2.delete(0, "end")
 
-#******************************FIN METODOS GUI***************************************
+#Funcion para resetear las subclaves
+#Si el parametro tab es 1 significa que el reset se producira en la pantalla Cifrar/Descifrar.
+#Si el parametro tab es 2 significa que el reset se producira en la pantalla BruteForce
+def resetSubKeyListGUI(tab):
+    if(tab==1):    
+        for i in range(0, 8):
+            listbtxttab1[i].delete(0, "end")
+    elif(tab==2):
+        for i in range(0, 8):
+            listbtxttab2[i].delete(0, "end")
 
-#******************************INICIO COMPUTATION*************************************
+#Funcion para escribir los valores intermedios de las fases del algoritmo de cifrado simple DES
+#Si el parametro tab es 1 significa que el reset se producira en la pantalla Cifrar/Descifrar.
+#Si el parametro tab es 2 significa que el reset se producira en la pantalla BruteForce
+def setFasesOnGui(tab, dictIntermediateValues):
+    j = 0
+    iterations = 8
+    if(tab==1):
+        for i in range(0, iterations):
+            data = dictIntermediateValues["Fase"+str(i)]
+            listfasestxtf3tab1[j].insert(0,data[0])
+            listfasestxtf3tab1[j+1].insert(0,data[1])
+            listfasestxtf3tab1[j+2].insert(0,data[2])
+            j = j+3
+    elif(tab==2):
+        for i in range(0, iterations):
+            data = dictIntermediateValues["Fase"+str(i)]
+            listfasestxtf3tab2[j].insert(0,data[0])
+            listfasestxtf3tab2[j+1].insert(0,data[1])
+            listfasestxtf3tab2[j+2].insert(0,data[2])
+            j = j+3
 
-#Funcion para el ataque por fuerza bruta. Recibe el mensaje original, el mensaje cifrado y las iteraciones.
-#A partir del mensaje original cifra con el numero de iteraciones indicado y con todas las claves posibles hasta encontrar
-#la clave que produce el mensaje cifrado que tenemos como parametro. Si existe devolvera la clave encontrada y el tiempo que se ha
-#tardado en hallarla.En caso de no haber clave que produzca el cifrado que se recibe como parametro devolvera como clave y como tiempo "ERROR"
-def BruteForcedescifradoDESsimplificado(mensajeoriginal, mensajecifrado, iteraciones):
-    ronda = iteraciones
-    mi_1 = mensajecifrado
-    indice = 0
-    clave = "000000000"
-    encontrado = False
-    start = datetime.datetime.now()
-    while(not encontrado and len(clave)==9):
-        ronda=8
-        while(ronda > 1 ):
-            Li_1 = mi_1[0:6]
-            Ri_1 = mi_1[6:12]
-            Li = Ri_1
-            Ki = subclave(clave, ronda)
-            fRi_1Ki = f(Ri_1,Ki)
-            Ri = xor(Li_1, fRi_1Ki, 6)
-            mi = Li+Ri
-            Ri_1 = Ri
-            Li_1 = Li
-            mi_1 = mi
-            ronda=ronda-1
+#Funcion para escribir los valores intermedios de las subclaves del algoritmo de cifrado simple DES
+#Si el parametro tab es 1 significa que el reset se producira en la pantalla Cifrar/Descifrar.
+#Si el parametro tab es 2 significa que el reset se producira en la pantalla BruteForce
+def setSubkeyListOnGUI(tab, cipherKey, iterations):
+    subKeyList = getSubKeyList(cipherKey, iterations=8)
+    if(tab==1):
+        for i in range(len(subKeyList)):
+            listbtxttab1[i].insert(0, subKeyList[i])
+        txt1f4tab1.place(x=350, y=10)
+        varres.set("Mensaje Cifrado")
+        lbl1f4tab1.place(x=140, y=10)
+    elif(tab==2):
+        for i in range(len(subKeyList)):
+            listbtxttab2[i].insert(0, subKeyList[i])
 
-        Ri = Ri_1
-        Ki = subclave(clave,ronda)
-        Li = xor(Li_1,f(Ri_1,Ki),6)
-        mi = Li+Ri
-        mensajedescifrado = mi
-        # Si existe clave
-        if(mensajedescifrado==mensajeoriginal):
-            end = datetime.datetime.now()
-            delta = end-start
-            encontrado=True
-            tiempo = (str(delta.total_seconds()*1000))[0:7]+"ms"
-            return clave, encontrado, tiempo
-        # Si no existe clave y no se han probado todas las combinaciones
-        # Se prueba con la siguiente clave.
-        else:
-            clave = int(clave,base=2)+1    
-            clave = bin(clave)[2:].zfill(9)
-    return "ERROR", encontrado, "ERROR" 
+#*******************PRACTICA 1 FIN METODOS GUI------------------------------------
 
-#Funcion para la generacion de subclaves.
-#Si es para cifrado (cifrado=True) las claves las produce en el orden i,i+1,i+2,...n-1,n
-#Si es para descifrado (cifrado=False) las claves se producen en el orden inverso n,n-1,...,i+2,i+1,i
-#Devuelve la lista de subclaves generada.
-def subclaves(clave, cifrado):
-    listasubclaves = []
-    if(cifrado):
-        rondas = 8
-        for ronda in range(0,rondas):
-            nelem = 0
-            n = 8
-            nelem = 0
-            claveaux=""
-            i = ronda-1
-            while nelem<8:
-                claveaux = claveaux+clave[(i+1)%9]
-                i = i+1
-                nelem = nelem+1
-            listasubclaves.append(claveaux)
+#*******************PRACTICA 2 METODOS GUI------------------------------------
+def setMessageFilledBlocksGUI(frame, messageFilled):
+    """
+    Funcion para escribir los bloques CBC de cifrado/descifrado
+    Si el parametro frame es 1 entonces los bloques que se escriben son de cifrado CBC
+    Si el parametro frame es 2 entonces los bloques que se escriben son de descifrado CBC
+    """
+    if(frame==1):
+        for i in range(0, len(messageFilled)):
+            listtxtfntab3[i].insert(0, messageFilled[i])
+    elif(frame==2):
+        for i in range(0, len(messageFilled)):
+            list2txtfntab3[i].insert(0, messageFilled[i])
+
+def fnOnCBCEncrypt():
+    """
+    Funcion que se ejecuta al pulsar el boton Cifrar en la pantalla CBC Cifrar/Descifrar.
+    Es la funcion que inicia la ejecucion del proceso de cifrado CBC.
+    """
+    message = txt1f1tab3.get()
+    IV = txt2f1tab3.get()
+    cipherKey = txt3f1tab3.get()
+    try:
+        if(inputErrors2("CBCmessageToEncrypt", message) == 0 and inputErrors2("cipherkey", cipherKey)==0 and inputErrors2("IV", IV)==0):
+            try:
+                resetIntermediateValuesGUI2(1)
+                txt2f2tab3.insert(0, IV)
+                txt3f2tab3.insert(0, cipherKey)
+                messageInBinary = stringToBinaryASCIIcode(message)
+                txt4f1tab3.insert(INSERT, messageInBinary)
+                messageFilled = fillingBlockSchema(messageInBinary)
+                messageFilledBlocks = generateMessageBlocks(messageFilled, int(len(messageFilled)/12))
+                setMessageFilledBlocksGUI(1, messageFilledBlocks)
+                encryptedMessageBlocks = encryptWithCBC(messageFilledBlocks, IV, cipherKey)
+                setMessageFilledBlocksGUI(2, encryptedMessageBlocks)
+                txt1f2tab3.insert(INSERT, ''.join(encryptedMessageBlocks))
+            except (ValueError, TypeError) as e:
+                messagebox.showerror("Error", e) 
+    except (ValueError, TypeError) as e:
+        messagebox.showerror("Error", e)
+
+
+def fnOnCBCDecrypt(): 
+    """
+    Funcion que se ejecuta al pulsar el boton Descifrar en la pantalla CBC Cifrar/Descifrar.
+    Es la funcion que inicia la ejecucion del proceso de descifrado CBC.
+    """
+    encryptedMessage = txt1f2tab3.get("1.0",END).replace('\n','')
+    IV = txt2f2tab3.get()
+    cipherKey = txt3f2tab3.get()
+    try:
+        if(inputErrors2("CBCmessageEncrypted", encryptedMessage) == 0 and inputErrors2("cipherkey", cipherKey)==0 and inputErrors2("IV", IV)==0):
+            try:
+                CB = generateMessageBlocks(encryptedMessage, int(len(encryptedMessage)/12))
+                resetFilledBlocks(2)
+                setMessageFilledBlocksGUI(2, CB)
+                M = decryptWithCBC(CB, IV, cipherKey)
+                setMessageFilledBlocksGUI(1, M)
+                m = ('').join(M)
+                resetMessageBinary()
+                txt4f1tab3.insert(INSERT, m)
+                mOrig = m[0:len(m)-12-int(m[len(m)-12:len(m)][0:4],base=2)] 
+                originalMessage = binaryToStringASCIIcode(mOrig)
+                resetOriginalMessage()
+                txt1f1tab3.insert(0,  repr(originalMessage)[0:52])
+            except (ValueError, TypeError) as e:
+                messagebox.showerror("Error", e) 
+    except (ValueError, TypeError) as e:
+        messagebox.showerror("Error", e)
+
+def resetIntermediateValuesGUI2(frame):
+    """
+    Funcion que resetea los valores intermedios del cifrado CBC
+    """
+    resetMessageBinary()
+    resetFilledBlocks(frame)
+    resetEncryptedMessage()
+
+def resetOriginalMessage():
+    """
+    Funcion que resetea el mensaje original
+    """
+    txt1f1tab3.delete(0, "end")
+
+def resetEncryptedMessage():
+    """
+    Funcion que resetea el mensaje cifrado con CBC
+    """
+    txt1f2tab3.delete('1.0', "end")
+    
+def resetFilledBlocks(frame):
+    """
+    Funcion que resetea los bloques de cifrado y descifrado CBC
+    Si el parametro frame es 1 entonces los bloques que se escriben son de cifrado CBC
+    Si el parametro frame es 2 entonces los bloques que se escriben son de descifrado CBC
+    """
+    if(frame==1):
+        for i in range(0, 35):
+            listtxtfntab3[i].delete(0, "end")
+    elif(frame==2):
+        for i in range(0, 35):
+            list2txtfntab3[i].delete(0, "end")
+
+def resetMessageBinary():
+    """
+    Funcion que resetea el mensaje tras pasar el procedimiento de relleno de bloques en binario
+    """
+    txt4f1tab3.delete('1.0', "end")
+
+def resetAttemptsCBC():
+    """
+    Funcion que resetea la salida de los intentos de descifrado CBC por fuerza bruta
+    """
+    txt1f3tab4.delete('1.0', "end")
+
+def fnOnCBCBruteForce():
+    """
+    Funcion que se ejecuta al pulsar el boton Fuerza Bruta en la pantalla CBC Fuerza Bruta.
+    Es la funcion que inicia la ejecucion del proceso de descifrado CBC por fuerza bruta. 
+    """
+    encryptedMessage = txt1f2tab4.get("1.0",END).replace('\n','')
+    originalMessage = txt2f1tab4.get()
+    try:
+        if(inputErrors2("CBCmessageToEncrypt", originalMessage) == 0 and inputErrors2("CBCmessageEncrypted", encryptedMessage)== 0):
+            CBCencryptedMessageBlocks = generateMessageBlocks(encryptedMessage, len(encryptedMessage)/12)
+            resetAttemptsCBC()
+            bruteForceCBCGUI(CBCencryptedMessageBlocks, originalMessage)
+    except(ValueError, TypeError) as e:
+        messagebox.showerror("Error", e)
+    
+def bruteForceCBCGUI(encryptedMessage, originalMessage):
+    """
+    Funcion sobreescrita del modulo m_CBCmode debido a la complejidad y a la relacion tan
+    interna con la GUI.
+    """
+    decryptedTryMessage = ""
+    minsToRun = 1
+    reachedMinLimit = False
+    startTime = datetime.datetime.now()
+    valuesTry = [] 
+    while(originalMessage != decryptedTryMessage and not reachedMinLimit):
+        cipherKey = generateCipherKey()
+        IV = generateRandomIV()
+        decryptedTryMessage = decryptMessage(encryptedMessage, IV, cipherKey)
+        valuesTry.append(decryptedTryMessage)
+        delta = datetime.datetime.now() - startTime
+        time.set(delta.total_seconds())
+        txt1f3tab4.insert(INSERT, repr(decryptedTryMessage))
+        txt1f3tab4.see("end")
+        if(delta.total_seconds() >= 60*minsToRun):
+            reachedMinLimit = True
+        root.update()
+    if(originalMessage == decryptedTryMessage):
+        txt1f3tab4.insert(INSERT, "\n\nIt was found. CipherKey: "+cipherKey+" IV: "+IV+"\n\n")
+        result.set("Encontrado.")
     else:
-        ronda = 7
-        while(ronda>=0):
-            nelem = 0
-            n = 8
-            nelem = 0
-            claveaux=""
-            i = ronda-1
-            while nelem<8:
-                claveaux = claveaux+clave[(i+1)%9]
-                i = i+1
-                nelem = nelem+1
-            listasubclaves.append(claveaux)
-            ronda = ronda - 1
-    return listasubclaves
-
-#Funcion para ejecutar el cifrado. 
-#El parametro tab indica si la pantalla en la que hay que escribir los resultados es Cifrar/Descifrar(tab=1) o Bruteforce(tab=2)
-def TestcifradoDESsimplificado(mensaje, clave, iteraciones, tab):
-    iteraciones = 8
-    mi_1 = mensaje
-    ronda=1
-    j=0
-    while(ronda <= 7):
-        Li_1 = mi_1[0:6]
-        Ri_1 = mi_1[6:12]
-        Li = Ri_1
-        #Escritura de datos intermedios
-        if(tab==1): #Cifrar/Descifrar
-            listfasestxtf3tab1[j].insert(0,Ri_1)
-            listfasestxtf3tab1[j+1].insert(0,Li_1)
-            listfasestxtf3tab1[j+2].insert(0,mi_1)
-        elif(tab==2):#Bruteforce
-            listfasestxtf3tab2[j].insert(0,Ri_1)
-            listfasestxtf3tab2[j+1].insert(0,Li_1)
-            listfasestxtf3tab2[j+2].insert(0,mi_1)
-        Ki = subclave(clave, ronda)
-        fRi_1Ki = f(Ri_1,Ki)
-        Ri = xor(Li_1, fRi_1Ki, 6)
-        mi = Li+Ri
-        Ri_1 = Ri
-        Li_1 = Li
-        mi_1 = mi
-        j = ronda*3
-        ronda=ronda+1
-
-    Ri = Ri_1
-    Ki = subclave(clave,ronda)
-    Li = xor(Li_1,f(Ri_1,Ki),6)
-    mi = Li+Ri
-    #Escritura de datos intermedios
-    if(tab==1):#Cifrar/Descifrar
-        listfasestxtf3tab1[j].insert(0,Ri_1)
-        listfasestxtf3tab1[j+1].insert(0,Li_1)
-        listfasestxtf3tab1[j+2].insert(0,mi_1)
-    elif(tab==2):#Bruteforce
-        listfasestxtf3tab2[j].insert(0,Ri_1)
-        listfasestxtf3tab2[j+1].insert(0,Li_1)
-        listfasestxtf3tab2[j+2].insert(0,mi_1)
-    return mi
-
-#Funcion para generar la subclave i-esima.
-#Recibe como parametro la clave (9b) y la ronda del algoritmo de cifrado.
-#Devuelve la subclave de la ronda i-esima.
-def subclave(clave, ronda):
-    n = 8
-    nelem = 0
-    claveaux=""
-    i = ronda-1
-    while nelem!=8:
-        claveaux = claveaux+clave[i%9]
-        i = i+1
-        nelem = nelem+1
-    return claveaux
-
-#Funcion f. Devuelve el resultado de la funcion f(Ri_1,Ki)
-def f(Ri_1,Ki):
-    expRi_1 = expansion(Ri_1)
-    ERi_1_XOR_Ki = xor(expRi_1, Ki, 8)
-    fRi_1Ki = scaja1(ERi_1_XOR_Ki[0:4])+scaja2(ERi_1_XOR_Ki[4:8])
-    return fRi_1Ki
-
-#Funcion para la S-Caja 1. Devuelve el valor correspondiente a la entrada dada como parametro.
-def scaja1(entrada):
-    s1 = [["101","010","001","110","011","100","111","000"],["001","100","110","010","000","111","101","011"]]
-
-    fila = int(entrada[0])
-    columna = entrada[1:4]
-    columna = int(columna, base=2)
-
-    return s1[fila][columna]
-
-#Funcion para la S-Caja 1. Devuelve el valor correspondiente a la entrada dada como parametro.
-def scaja2(entrada):
-    s2 = [["100","000","110","101","111","001","011","010"],["101","011","000","111","110","010","001","100"]]
-
-    fila = int(entrada[0])
-    columna = entrada[1:4]
-    columna = int(columna, base=2)
-
-    return s2[fila][columna]
-
-#Funcion de expansion. Recibe parte del mensaje (6b) y produce a la salida un mensaje de (8b).
-def expansion(mensaje):
-    mensajeexpandido = mensaje[0]
-    mensajeexpandido = mensajeexpandido+mensaje[1]
-    mensajeexpandido = mensajeexpandido+mensaje[3]
-    mensajeexpandido = mensajeexpandido+mensaje[2]
-    mensajeexpandido = mensajeexpandido+mensaje[3]
-    mensajeexpandido = mensajeexpandido+mensaje[2]
-    mensajeexpandido = mensajeexpandido+mensaje[4]
-    mensajeexpandido = mensajeexpandido+mensaje[5]
-    return mensajeexpandido
-
-#Funcion XOR para n bits 
-def xor(a,b,n):
-    res = ""
-    for i in range(0,n):
-        ai = a[i]
-        bi = b[i]
-        res = res + operacion_xor(ai,bi)
-    return res
-
-#Funcion logica XOR para 1 bit
-def operacion_xor(a,b):
-    if(a=="0" and b=="0"):
-        return "0"
-    if(a=="1" and b=="0"):
-        return "1"
-    if(a=="0" and b=="1"):
-        return "1"
-    if(a=="1" and b=="1"):
-        return "0"
-
-#Funcion para ejecutar el descifrado. 
-#El parametro tab indica si la pantalla en la que hay que escribir los resultados es Cifrar/Descifrar(tab=1) o Bruteforce(tab=2)
-def TestDescifradoDESsimplificado(mensaje, clave, iteraciones, tab):
-    iteraciones = 8
-    mi_1 = mensaje
-    ronda=1
-    j=0
-    while(ronda <= 7):
-        Li_1 = mi_1[0:6]
-        Ri_1 = mi_1[6:12]
-        Li = Ri_1
-        #Escritura de datos intermedios
-        if(tab==1): #Cifrar/Descifrar
-            listfasestxtf3tab1[j].insert(0,Ri_1)
-            listfasestxtf3tab1[j+1].insert(0,Li_1)
-            listfasestxtf3tab1[j+2].insert(0,mi_1)
-        elif(tab==2): #Bruteforce
-            listfasestxtf3tab2[j].insert(0,Ri_1)
-            listfasestxtf3tab2[j+1].insert(0,Li_1)
-            listfasestxtf3tab2[j+2].insert(0,mi_1)
-        Ki = subclave(clave, 9-ronda)
-        fRi_1Ki = f(Ri_1,Ki)
-        Ri = xor(Li_1, fRi_1Ki, 6)
-        mi = Li+Ri
-        Ri_1 = Ri
-        Li_1 = Li
-        mi_1 = mi
-        j = ronda*3
-        ronda=ronda+1
-
-    Ri = Ri_1
-    Ki = subclave(clave,9-ronda)
-    Li = xor(Li_1,f(Ri_1,Ki),6)
-    mi = Li+Ri
-    #Escritura de datos intermedios
-    if(tab==1): #Cifrar/Descifrar
-        listfasestxtf3tab1[j].insert(0,Ri_1)
-        listfasestxtf3tab1[j+1].insert(0,Li_1)
-        listfasestxtf3tab1[j+2].insert(0,mi_1)
-    elif(tab==2): #Bruteforce
-        listfasestxtf3tab2[j].insert(0,Ri_1)
-        listfasestxtf3tab2[j+1].insert(0,Li_1)
-        listfasestxtf3tab2[j+2].insert(0,mi_1)
-    return mi
-
-
-#******************************FIN COMPUTATION*************************************
-
+        txt1f3tab4.insert(INSERT, "Time exceeded. It wasn't found.")
+        result.set("Error.")
 
 #******************************INICIO GUI******************************************
 
-root = Tk() #ventana principal
-root.title("Práctica 1") #titulo ventana principal
-root.geometry("800x600") #largo x ancho
+root = tk.Tk() #ventana principal
+
+style = ThemedStyle(root) #Aplicacion de estilo a la GUI 
+currentTheme = StringVar() 
+currentTheme.set(THEME1) #Aplicacion tema claro
+style.set_theme(currentTheme.get()) 
+root.title("Práctica 2") #titulo ventana principal
+root.geometry("810x680") #area: largo x ancho
 root.resizable(0,0) #bloqueo de maximizacion o alteracion de las longitudes de la ventana
 
+#Creacion para menu de accesibilidad para cambio de tema (Apariencia)
+menu = tk.Menu(root, tearoff=False) 
+subMenu = tk.Menu(menu, tearoff=False)
+subMenu.add_command(label="Cambiar Tema", command= lambda: changeTheme(root))
+menu.add_cascade(label="Tema", menu=subMenu)
+root.config(menu=menu)
+
 tab_control = ttk.Notebook(root) #Notebook para el control de las pantallas(pestanias)
+
 tab1 = ttk.Frame(tab_control) #Pantalla Cifrar/Descifrar
 tab2 = ttk.Frame(tab_control) #Pantalla Bruteforce
+tab3 = ttk.Frame(tab_control) #Pantalla Cifrar/Descifrar modo CBC
+tab4 = ttk.Frame(tab_control) #Pantalla Fuerza Bruta CBC
+
 
 #---------------------------------TAB 1 CIFRAR/DESCIFRAR------------------------------
 tab_control.add(tab1, text='Cifrar/Descifrar') #Titulo de la pantalla
 
 #-----Primer bloque (mensaje clave y botones cifrar y descifrar)------
-frame1tab1 = Frame(tab1,height=150, width=210,bg="lightskyblue") 
+frame1tab1 = ttk.Frame(tab1,height=150, width=210) 
 frame1tab1.place(x=10, y=10)
 
-lbl1f1tab1 = Label(frame1tab1,text="Mensaje (12b)")
+lbl1f1tab1 = ttk.Label(frame1tab1,text="Mensaje (12b)")
 lbl1f1tab1.name="lblMensaje"
-lbl1f1tab1.place(x=20,y=20)
+lbl1f1tab1.place(x=5,y=20)
 
-lbl2f1tab1 = Label(frame1tab1,text="Clave (9b)")
+lbl2f1tab1 = ttk.Label(frame1tab1,text="Clave (9b)")
 lbl2f1tab1.name="lblClave"
-lbl2f1tab1.place(x=20,y=50)
+lbl2f1tab1.place(x=5,y=50)
 
-txt1f1tab1 = Entry(frame1tab1, width=12)
+txt1f1tab1 = ttk.Entry(frame1tab1, width=12)
 txt1f1tab1.name="txtMensaje"
 txt1f1tab1.place(x=110, y=20)
 txt1f1tab1.insert(0, "011100100110")
 
-txt2f1tab1 = Entry(frame1tab1, width=12)
+txt2f1tab1 = ttk.Entry(frame1tab1, width=12)
 txt2f1tab1.name="txtClave"
 txt2f1tab1.place(x=110, y=50)
 txt2f1tab1.insert(0, "011001010")
 
-b1btn1f1tab1 = Button(frame1tab1, text="Cifrar", bg="royalblue",command=fnOnCifrar)
-b1btn1f1tab1.place(x=20,y=80)
+b1btn1f1tab1 = ttk.Button(frame1tab1, text="Cifrar", command=fnOnEncrypt)
+b1btn1f1tab1.place(x=0,y=80)
 b1btn1f1tab1.name = "btnCifrar"
 
-b1btn2f1tab1 = Button(frame1tab1, text="Descifrar", bg="royalblue",command=fnOnDescifrar)
-b1btn2f1tab1.place(x=130,y=80)
+b1btn2f1tab1 = ttk.Button(frame1tab1, text="Descifrar", command=fnOnDecrypt)
+b1btn2f1tab1.place(x=110,y=80)
 b1btn2f1tab1.name = "btnDescifrar"
 #-----Fin Primer bloque (mensaje clave y botones cifrar y descifrar)------
 
 #-----Segundo bloque (subclaves)------
-frame2tab1 = Frame(tab1,height=150, width=600,bg="skyblue")
+frame2tab1 = ttk.Frame(tab1,height=150, width=550,relief="groove")
 frame2tab1.place(x=230, y=10)
 
-lbl1f2tab1 = Label(frame2tab1,text="Subclaves (8b)")
+lbl1f2tab1 = ttk.Label(frame2tab1,text="Subclaves (8b)")
 lbl1f2tab1.place(x=10, y=20)
 
 listbtxttab1 = [] 
 i = 0
 _x=10
 while i < 8:
-    lblnf2tab1 = Label(frame2tab1, text="Subclave "+str(i))
-    listbtxttab1.append(Entry(frame2tab1, width=8, state='normal'))
+    lblnf2tab1 = ttk.Label(frame2tab1, text="Subclave "+str(i))
+    listbtxttab1.append(ttk.Entry(frame2tab1, width=8, state='normal'))
     if((i%2)==0):
         lblnf2tab1.place(x=_x+65*i, y=60)    
         listbtxttab1[i].place(x=_x+65*i+65, y=60)
@@ -527,12 +416,11 @@ while i < 8:
 #-----Fin Segundo bloque (subclaves)------
 
 #-----Tercer bloque (Fases)------
-
-frame3tab1 = Frame(tab1,height=300, width=800,bg="deepskyblue")
+frame3tab1 = ttk.Frame(tab1,height=300, width=770, relief="groove")
 frame3tab1.place(x=10, y=170)
 
-lbl1f3tab1 = Label(frame3tab1,text="Fases")
-lbl1f3tab1.place(x=0, y=0)
+lbl1f3tab1 = ttk.Label(frame3tab1,text="Fases")
+lbl1f3tab1.place(x=5, y=5)
 
 i = 0
 n = 8
@@ -541,21 +429,22 @@ nj = 3
 pasox=200
 _y = 210
 listfasestxtf3tab1 = [] 
+marginxfasestab1 = 15
 while(i < 4):
-    lbln1f3tab1 = Label(tab1, text="Fase "+str(i))
-    lbln1f3tab1.place(x=10+pasox*i, y=_y)
-    lbln2f3tab1 = Label(tab1, text="R"+str(i)+" (6b)")
-    lbln2f3tab1.place(x=10+pasox*i, y=_y+30)
-    lbln3f3tab1 = Label(tab1, text="L"+str(i)+" (6b)")
-    lbln3f3tab1.place(x=10+pasox*i, y=_y+60)
-    lbln4f3tab1 = Label(tab1, text="M"+str(i+1)+" (12b)")
-    lbln4f3tab1.place(x=10+pasox*i, y=_y+90)
+    lbln1f3tab1 =ttk.Label(tab1, text="Fase "+str(i))
+    lbln1f3tab1.place(x=marginxfasestab1+pasox*i, y=_y)
+    lbln2f3tab1 =ttk.Label(tab1, text="R"+str(i)+" (6b)")
+    lbln2f3tab1.place(x=marginxfasestab1+pasox*i, y=_y+30)
+    lbln3f3tab1 =ttk.Label(tab1, text="L"+str(i)+" (6b)")
+    lbln3f3tab1.place(x=marginxfasestab1+pasox*i, y=_y+60)
+    lbln4f3tab1 =ttk.Label(tab1, text="M"+str(i+1)+" (12b)")
+    lbln4f3tab1.place(x=marginxfasestab1+pasox*i, y=_y+90)
     
-    listfasestxtf3tab1.append(Entry(tab1, width=8, state='normal'))
+    listfasestxtf3tab1.append(ttk.Entry(tab1, width=8, state='normal'))
     listfasestxtf3tab1[j].place(x=80+pasox*i, y=_y+30)
-    listfasestxtf3tab1.append(Entry(tab1, width=8, state='normal'))
+    listfasestxtf3tab1.append(ttk.Entry(tab1, width=8, state='normal'))
     listfasestxtf3tab1[j+1].place(x=80+pasox*i, y=_y+60)
-    listfasestxtf3tab1.append(Entry(tab1, width=12, state='normal'))
+    listfasestxtf3tab1.append(ttk.Entry(tab1, width=12, state='normal'))
     listfasestxtf3tab1[j+2].place(x=80+pasox*i, y=_y+90)
     i = i+1
     j = j+3
@@ -564,38 +453,36 @@ i = 4
 j =12
 _y = 340
 while(i < 8):
-    lbln5f3tab1 = Label(tab1, text="Fase "+str(i))
-    lbln5f3tab1.place(x=10+pasox*(i-4), y=_y)
-    lbln6f3tab1 = Label(tab1, text="R"+str(i)+" (6b)")
-    lbln6f3tab1.place(x=10+pasox*(i-4), y=_y+30)
-    lbln7f3tab1 = Label(tab1, text="L"+str(i)+" (6b)")
-    lbln7f3tab1.place(x=10+pasox*(i-4), y=_y+60)
-    lbln8f3tab1 = Label(tab1, text="M"+str(i+1)+" (12b)")
-    lbln8f3tab1.place(x=10+pasox*(i-4), y=_y+90)
+    lbln5f3tab1 =ttk.Label(tab1, text="Fase "+str(i))
+    lbln5f3tab1.place(x=marginxfasestab1+pasox*(i-4), y=_y)
+    lbln6f3tab1 =ttk.Label(tab1, text="R"+str(i)+" (6b)")
+    lbln6f3tab1.place(x=marginxfasestab1+pasox*(i-4), y=_y+30)
+    lbln7f3tab1 =ttk.Label(tab1, text="L"+str(i)+" (6b)")
+    lbln7f3tab1.place(x=marginxfasestab1+pasox*(i-4), y=_y+60)
+    lbln8f3tab1 =ttk.Label(tab1, text="M"+str(i+1)+" (12b)")
+    lbln8f3tab1.place(x=marginxfasestab1+pasox*(i-4), y=_y+90)
     
-    listfasestxtf3tab1.append(Entry(tab1, width=8, state='normal'))
+    listfasestxtf3tab1.append(ttk.Entry(tab1, width=8, state='normal'))
     listfasestxtf3tab1[j].place(x=80+pasox*(i-4), y=_y+30)
-    listfasestxtf3tab1.append(Entry(tab1, width=8, state='normal'))
+    listfasestxtf3tab1.append(ttk.Entry(tab1, width=8, state='normal'))
     listfasestxtf3tab1[j+1].place(x=80+pasox*(i-4), y=_y+60)
-    listfasestxtf3tab1.append(Entry(tab1, width=12, state='normal'))
+    listfasestxtf3tab1.append(ttk.Entry(tab1, width=12, state='normal'))
     listfasestxtf3tab1[j+2].place(x=80+pasox*(i-4), y=_y+90)
     i = i+1
     j = j+3
 #-----Tercer bloque (Fases)------
 
 #-----Cuarto bloque (Resultado: Mensaje Cifrado/Descifrado)------
-
-frame4tab1 = Frame(tab1,height=100, width=800,bg="steelblue")
+frame4tab1 = ttk.Frame(tab1,height=100, width=800)
 frame4tab1.place(x=10, y=480)
 
 varres = StringVar()
 varres.set('Resultado')
-lbl1f4tab1 = Label(frame4tab1,textvariable=varres,font="Arial, 20")
+lbl1f4tab1 =ttk.Label(frame4tab1,textvariable=varres,font="Arial, 20")
 lbl1f4tab1.place(x=210, y=10)     
-txt1f4tab1 = Entry(frame4tab1,font="Arial, 20", width=12)
+txt1f4tab1 =ttk.Entry(frame4tab1,font="Arial, 20", width=12)
 txt1f4tab1.place(x=350, y=10)
 #-----Fin Cuarto bloque (Resultado: Mensaje Cifrado/Descifrado)------
-
 #---------------------------------FIN TAB 1------------------------------
 
 #---------------------------------TAB 2 BRUTEFORCE------------------------------
@@ -603,41 +490,40 @@ tab_control.add(tab2, text='Bruteforce') #Titulo de la pantalla
 tab_control.pack(expand=1, fill='both')
 
 #-----Primer bloque (mensaje original y cifrado y boton bruteforce)------
-frame1tab2 = Frame(tab2,height=150, width=230,bg="lightskyblue")
+frame1tab2 = ttk.Frame(tab2,height=150, width=230)
 frame1tab2.place(x=10, y=10)
 
-lbl1f1tab2 = Label(frame1tab2,text="Mensaje Cifrado (12b)")
-lbl1f1tab2.place(x=20,y=20)
-lbl2f1tab2 = Label(frame1tab2,text="Mensaje Original (12b)")
-lbl2f1tab2.place(x=20,y=50)
+lbl1f1tab2 =ttk.Label(frame1tab2,text="Mensaje Cifrado (12b)")
+lbl1f1tab2.place(x=5,y=20)
+lbl2f1tab2 =ttk.Label(frame1tab2,text="Mensaje Original (12b)")
+lbl2f1tab2.place(x=5,y=50)
 
-txt1f1tab2 = Entry(frame1tab2, width=12)
-txt1f1tab2.place(x=150, y=20)
+txt1f1tab2 =ttk.Entry(frame1tab2, width=12)
+txt1f1tab2.place(x=140, y=20)
 txt1f1tab2.insert(0, "000111001110")
 
-txt2f1tab2 = Entry(frame1tab2, width=12)
-txt2f1tab2.place(x=150, y=50)
+txt2f1tab2 =ttk.Entry(frame1tab2, width=12)
+txt2f1tab2.place(x=140, y=50)
 txt2f1tab2.insert(0, "011100100110")
 
-b1btn1f1tab2 = Button(frame1tab2, text="Fuerza Bruta", bg="royalblue",command=fnOnBruteForce)
+b1btn1f1tab2 = ttk.Button(frame1tab2, text="Fuerza Bruta", command=fnBruteForce)
 b1btn1f1tab2.place(x=20,y=80)
 b1btn1f1tab2.name = "btnbruteforce"
 #-----Fin Primer bloque (mensaje original y cifrado y boton bruteforce)------
 
 #-----Segundo bloque (subclaves)------
-
-frame2tab2 = Frame(tab2,height=150, width=600,bg="skyblue")
+frame2tab2 = ttk.Frame(tab2,height=150, width=530, relief="groove")
 frame2tab2.place(x=250, y=10)
 
-lbl1f2tab2 = Label(frame2tab2,text="Subclaves (8b)")
+lbl1f2tab2 =ttk.Label(frame2tab2,text="Subclaves (8b)")
 lbl1f2tab2.place(x=10, y=20)
 
 listbtxttab2 = [] 
 i = 0
 _x=10
 while i < 8:
-    lblnf2tab1 = Label(frame2tab2, text="Subclave "+str(i))
-    listbtxttab2.append(Entry(frame2tab2, width=8, state='normal'))
+    lblnf2tab1 =ttk.Label(frame2tab2, text="Subclave "+str(i))
+    listbtxttab2.append(ttk.Entry(frame2tab2, width=8, state='normal'))
     if((i%2)==0):
         lblnf2tab1.place(x=_x+65*i, y=60)    
         listbtxttab2[i].place(x=_x+65*i+65, y=60)
@@ -648,11 +534,11 @@ while i < 8:
 #-----Fin Segundo bloque (subclaves)------
 
 #-----Tercer bloque (Fases)------
-frame3tab2 = Frame(tab2,height=300, width=800,bg="deepskyblue")
+frame3tab2 = ttk.Frame(tab2,height=300, width=770, relief="groove")
 frame3tab2.place(x=10, y=170)
 
-lbl1f3tab2 = Label(frame3tab2,text="Fases")
-lbl1f3tab2.place(x=0, y=0)
+lbl1f3tab2 =ttk.Label(frame3tab2,text="Fases")
+lbl1f3tab2.place(x=5, y=5)
 
 i = 0
 n = 8
@@ -664,21 +550,22 @@ pasox=200
 pasox2=200
 _y = 210
 listfasestxtf3tab2 = [] 
+marginxfasestab2 = 15
 while(i < 4):
-    lbln1f3tab2 = Label(tab2, text="Fase "+str(i))
-    lbln1f3tab2.place(x=10+pasox*i, y=_y)
-    lbln2f3tab2 = Label(tab2, text="R"+str(i)+" (6b)")
-    lbln2f3tab2.place(x=10+pasox*i, y=_y+30)
-    lbln3f3tab2 = Label(tab2, text="L"+str(i)+" (6b)")
-    lbln3f3tab2.place(x=10+pasox*i, y=_y+60)
-    lbln4f3tab2 = Label(tab2, text="M"+str(i+1)+" (12b)")
-    lbln4f3tab2.place(x=10+pasox*i, y=_y+90)
+    lbln1f3tab2 =ttk.Label(tab2, text="Fase "+str(i))
+    lbln1f3tab2.place(x=marginxfasestab2+pasox*i, y=_y)
+    lbln2f3tab2 =ttk.Label(tab2, text="R"+str(i)+" (6b)")
+    lbln2f3tab2.place(x=marginxfasestab2+pasox*i, y=_y+30)
+    lbln3f3tab2 =ttk.Label(tab2, text="L"+str(i)+" (6b)")
+    lbln3f3tab2.place(x=marginxfasestab2+pasox*i, y=_y+60)
+    lbln4f3tab2 =ttk.Label(tab2, text="M"+str(i+1)+" (12b)")
+    lbln4f3tab2.place(x=marginxfasestab2+pasox*i, y=_y+90)
     
-    listfasestxtf3tab2.append(Entry(tab2, width=8, state='normal'))
+    listfasestxtf3tab2.append(ttk.Entry(tab2, width=8, state='normal'))
     listfasestxtf3tab2[j].place(x=80+pasox*i, y=_y+30)
-    listfasestxtf3tab2.append(Entry(tab2, width=8, state='normal'))
+    listfasestxtf3tab2.append(ttk.Entry(tab2, width=8, state='normal'))
     listfasestxtf3tab2[j+1].place(x=80+pasox*i, y=_y+60)
-    listfasestxtf3tab2.append(Entry(tab2, width=12, state='normal'))
+    listfasestxtf3tab2.append(ttk.Entry(tab2, width=12, state='normal'))
     listfasestxtf3tab2[j+2].place(x=80+pasox*i, y=_y+90)
     i = i+1
     j = j+3
@@ -687,41 +574,247 @@ i = 4
 j =12
 _y = 340
 while(i < 8):
-    lbln5f3tab2 = Label(tab2, text="Fase "+str(i))
-    lbln5f3tab2.place(x=10+pasox*(i-4), y=_y)
-    lbln6f3tab2= Label(tab2, text="R"+str(i)+" (6b)")
-    lbln6f3tab2.place(x=10+pasox*(i-4), y=_y+30)
-    lbln7f3tab2 = Label(tab2, text="L"+str(i)+" (6b)")
-    lbln7f3tab2.place(x=10+pasox*(i-4), y=_y+60)
-    lbln8f3tab2 = Label(tab2, text="M"+str(i+1)+" (12b)")
-    lbln8f3tab2.place(x=10+pasox*(i-4), y=_y+90)
+    lbln5f3tab2 =ttk.Label(tab2, text="Fase "+str(i))
+    lbln5f3tab2.place(x=marginxfasestab2+pasox*(i-4), y=_y)
+    lbln6f3tab2=ttk.Label(tab2, text="R"+str(i)+" (6b)")
+    lbln6f3tab2.place(x=marginxfasestab2+pasox*(i-4), y=_y+30)
+    lbln7f3tab2 =ttk.Label(tab2, text="L"+str(i)+" (6b)")
+    lbln7f3tab2.place(x=marginxfasestab2+pasox*(i-4), y=_y+60)
+    lbln8f3tab2 =ttk.Label(tab2, text="M"+str(i+1)+" (12b)")
+    lbln8f3tab2.place(x=marginxfasestab2+pasox*(i-4), y=_y+90)
     
-    listfasestxtf3tab2.append(Entry(tab2, width=8, state='normal'))
+    listfasestxtf3tab2.append(ttk.Entry(tab2, width=8, state='normal'))
     listfasestxtf3tab2[j].place(x=80+pasox*(i-4), y=_y+30)
-    listfasestxtf3tab2.append(Entry(tab2, width=8, state='normal'))
+    listfasestxtf3tab2.append(ttk.Entry(tab2, width=8, state='normal'))
     listfasestxtf3tab2[j+1].place(x=80+pasox*(i-4), y=_y+60)
-    listfasestxtf3tab2.append(Entry(tab2, width=12, state='normal'))
+    listfasestxtf3tab2.append(ttk.Entry(tab2, width=12, state='normal'))
     listfasestxtf3tab2[j+2].place(x=80+pasox*(i-4), y=_y+90)
     i = i+1
     j = j+3
 #-----Fin Tercer bloque (Fases)------
 
 #-----Cuarto bloque (Clave y tiempo)------
-framebloque4 = Frame(tab2,height=100, width=800,bg="steelblue")
+framebloque4 = ttk.Frame(tab2,height=100, width=800)
 framebloque4.place(x=10, y=480)
 
-lbl1f4tab2 = Label(framebloque4,text="Clave",font="Arial, 20")
+lbl1f4tab2 =ttk.Label(framebloque4,text="Clave",font="Arial, 20")
 lbl1f4tab2.place(x=100, y=10)
-txt1f4tab2 = Entry(framebloque4,font="Arial, 20", width=9)
+txt1f4tab2 =ttk.Entry(framebloque4,font="Arial, 20", width=9)
 txt1f4tab2.place(x=200, y=10)
 
-lbl2f4tab2 = Label(framebloque4,text="Tiempo",font="Arial, 20")
+
+lbl2f4tab2 =ttk.Label(framebloque4,text="Tiempo",font="Arial, 20")
 lbl2f4tab2.place(x=400, y=10)
-txt2f4tab2 = Entry(framebloque4,font="Arial, 20", width=9)
-txt2f4tab2.place(x=500, y=10)
+txt2f4tab2 =ttk.Entry(framebloque4,font="Arial, 20", width=9)
+txt2f4tab2.place(x=500, y=10) 
 #-----Fin Cuarto bloque (Fases)------
 
 #-----------------------------------FIN TAB 2---------------------------------------
+
+#---------------------------------TAB 3 CBC CIFRAR/DESCIFRAR------------------------------
+tab_control.add(tab3, text='CBC Cifrar/Descifrar') #Titulo de la pantalla
+
+#-----Primer bloque (mensaje clave y botones cifrar y descifrar)------
+frame1tab3 = ttk.Frame(tab3,height=630, width=400, relief="groove") 
+frame1tab3.place(x=10, y=10)
+
+#-----Frame 1------------------------------------------------------------------------------
+    #-Mensaje para cifrar (cadena de caracteres)
+    #-Vector de inicializacion VI y clave de cifrado 
+    #-Mensaje convertido a binario y con proceso de relleno de bloques
+    #-Mensaje convertido a binario y con proceso de relleno de bloques en forma de bloques
+#------------------------------------------------------------------------------------------
+lbl1f1tab3 = ttk.Label(frame1tab3,text="Mensaje (50 palabras)")
+lbl1f1tab3.name="lblCBCMensaje"
+lbl1f1tab3.place(x=5,y=20)
+
+txt1f1tab3 = ttk.Entry(frame1tab3, width=50)
+txt1f1tab3.name="txtCBCMensaje"
+txt1f1tab3.place(x=5, y=40)
+
+lbl2f1tab3 = ttk.Label(frame1tab3,text="IV (12b)")
+lbl2f1tab3.name="lblIV"
+lbl2f1tab3.place(x=5,y=60)
+
+txt2f1tab3 = ttk.Entry(frame1tab3, width=12)
+txt2f1tab3.name="txtIV"
+txt2f1tab3.place(x=5, y=80)
+
+lbl3f1tab3 = ttk.Label(frame1tab3,text="Clave cifrado sDES (9b)")
+lbl3f1tab3.name="lblCipherKey"
+lbl3f1tab3.place(x=5,y=100)
+
+txt3f1tab3 = ttk.Entry(frame1tab3, width=9)
+txt3f1tab3.name="txtCipherKey"
+txt3f1tab3.place(x=5, y=120)
+
+b1btn1f1tab3 = ttk.Button(frame1tab3, text="Cifrar >>", command=fnOnCBCEncrypt)
+b1btn1f1tab3.place(x=340,y=5)
+b1btn1f1tab3.name = "btnCifrar"
+
+lbl4f1tab3 = ttk.Label(frame1tab3,text="Mensaje en binario (Máx. 400b)")
+lbl4f1tab3.name="lblMensajeBinario"
+lbl4f1tab3.place(x=5, y=140)
+
+txt4f1tab3 = Text(frame1tab3, width=47, height=11)
+txt4f1tab3.name="txtMensaje"
+txt4f1tab3.place(x=5, y=160)
+tab_control.select(tab3)
+
+lbl4f1tab3 =ttk.Label(frame1tab3, text="Bloques (12b)")
+lbl4f1tab3.place(x=5, y=350)
+
+listtxtfntab3 = [] 
+i = 0
+j = 0
+paso = 135
+xlbl_ant = 5
+xtxt_ant = 25
+n = 0
+while n < 36:
+    lblnf1tab3 =ttk.Label(frame1tab3, text="B"+str(n))
+    lblnf1tab3.place(x=5+135*i, y=380+20*j)
+    txtnf1tab3 = ttk.Entry(frame1tab3, width=12, state='normal')
+    txtnf1tab3.place(x=35+135*i, y=380+20*j)
+    listtxtfntab3.append(txtnf1tab3)
+    i = i + 1
+    if( (i%3)==0 ):
+        j = j+1
+        i = 0 
+    n = n + 1
+
+#------------------------------FIN FRAME 1------------------------------------
+
+#------------------------------INICIO SEGUNDO FRAME --------------------------------
+
+#-----Frame 2------------------------------------------------------------------------------
+    #-Mensaje para descifrar (cadena de bits despues de proceso CBC de Cifrado)
+    #-Vector de inicializacion VI y clave de cifrado
+    #-Mensaje convertido a binario y con proceso de relleno de bloques en forma de bloques
+#------------------------------------------------------------------------------------------
+frame2tab3 = ttk.Frame(tab3,height=630, width=390, relief="groove") 
+frame2tab3.place(x=408, y=10)
+
+lbl1f2tab3 = ttk.Label(frame2tab3,text="Mensaje Encriptado")
+lbl1f2tab3.name="lblMensaje"
+lbl1f2tab3.place(x=280,y=20)
+
+txt1f2tab3 = Text(frame2tab3, width=47, height=12)
+txt1f2tab3.name="txtCBCMensaje"
+txt1f2tab3.place(x=5, y=40)
+
+lbl2f2tab3 = ttk.Label(frame2tab3,text="IV (12b)")
+lbl2f2tab3.name="lblIV"
+lbl2f2tab3.place(x=340,y=240)
+
+txt2f2tab3 = ttk.Entry(frame2tab3, width=12)
+txt2f2tab3.name="txtIV"
+txt2f2tab3.place(x=307, y=260)
+
+lbl3f2tab3 = ttk.Label(frame2tab3,text="Clave cifrado sDES (9b)")
+lbl3f2tab3.name="lblCipherKey"
+lbl3f2tab3.place(x=260,y=290)
+
+txt3f2tab3 = ttk.Entry(frame2tab3, width=9)
+txt3f2tab3.name="txtCipherKey"
+txt3f2tab3.place(x=325, y=310)
+
+b1btn1f2tab3 = ttk.Button(frame2tab3, text="<< Descifrar", command=fnOnCBCDecrypt)
+b1btn1f2tab3.place(x=5,y=5)
+b1btn1f2tab3.name = "btnCBCDescifrar"
+
+lbl4f2tab3 =ttk.Label(frame2tab3, text="Bloques (12b)")
+lbl4f2tab3.place(x=305, y=350)
+
+list2txtfntab3 = [] 
+i = 0
+j = 0
+paso = 135
+xlbl_ant = 5
+xtxt_ant = 25
+n = 0
+while n < 36:
+    lblnf2tab3 =ttk.Label(frame2tab3, text="B"+str(n))
+    lblnf2tab3.place(x=5+135*i, y=380+20*j)
+    txtnf2tab3 = ttk.Entry(frame2tab3, width=12, state='normal')
+    txtnf2tab3.place(x=35+135*i, y=380+20*j)
+    list2txtfntab3.append(txtnf2tab3)
+    i = i + 1
+    if( (i%3)==0 ):
+        j = j+1
+        i = 0 
+    n = n + 1
+
+#***********************************FIN FRAME 2****************************************
+#***********************************FIN TAB 3******************************************
+
+#---------------------------------TAB 4 CBC FUERZA BRUTA------------------------------
+
+    #-----Frame 1------------------------------------------------------------------------------
+        #-Mensaje cifrado CBC
+        #-Mensaje original (cadena de caracteres)
+        #-Tiempo 1 min
+        #-Resultado
+    #------------------------------------------------------------------------------------------
+
+tab_control.add(tab4, text='CBC Fuerza Bruta')
+
+frame1tab4 = ttk.Frame(tab4,height=630, width=795, relief="groove") 
+frame1tab4.place(x=5, y=10)
+
+lbl1f1tab4 = ttk.Label(frame1tab4,text="Mensaje Encriptado")
+lbl1f1tab4.name="lblMensaje"
+lbl1f1tab4.place(x=5,y=20)
+
+
+lbl2f1tab4 = ttk.Label(frame1tab4,text="Mensaje Original (50 palabras)")
+lbl2f1tab4.name="lblCBCMensaje"
+lbl2f1tab4.place(x=5,y=160)
+
+txt2f1tab4 = ttk.Entry(frame1tab4, width=50)
+txt2f1tab4.name="txtCBCMensaje"
+txt2f1tab4.place(x=5, y=180)
+
+b1btn1f1tab4 = ttk.Button(frame1tab4, text="Fuerza Bruta", command=fnOnCBCBruteForce)
+b1btn1f1tab4.place(x=5,y=215)
+b1btn1f1tab4.name = "btnCBCFuerzaBruta"
+
+frame3tab4 = ttk.Frame(tab4,height=255, width=780, relief="groove") 
+frame3tab4.place(x=10, y=270)
+
+txt1f3tab4 = scrolledtext.ScrolledText(frame3tab4, width=95, height=16)
+txt1f3tab4.name="txtCBCMensaje"
+txt1f3tab4.place(x=0, y=0)
+
+lbl3f1tab4 =ttk.Label(frame1tab4,text="Tiempo",font="Arial, 20")
+lbl3f1tab4.place(x=10, y=530)
+
+time = StringVar()
+time.set("")
+txt3f1tab4 = ttk.Entry(frame1tab4, textvariable=time, width=11, font="Arial 18")
+txt3f1tab4.insert(0, time.get())
+txt3f1tab4.place(x=10, y=570)
+
+lbl4f1tab4 =ttk.Label(frame1tab4,text="Resultado",font="Arial, 20")
+lbl4f1tab4.place(x=550, y=530)
+
+result = StringVar()
+result.set("")
+txt4f1tab4 = ttk.Entry(frame1tab4, textvariable=result, width=15, font="Arial 18")
+txt4f1tab4.place(x=550, y=570)
+
+#-----Frame 2------------------------------------------------------------------------------
+    #-Pruebas de fuerza bruta de descifrado CBC
+#------------------------------------------------------------------------------------------
+
+frame2tab4 = ttk.Frame(tab4,height=100, width=780, relief="groove") 
+frame2tab4.place(x=10, y=50)
+
+txt1f2tab4 = Text(frame2tab4, width=97, height=6)
+txt1f2tab4.name="txtCBCMensaje"
+txt1f2tab4.place(x=0, y=0)
+
+tab_control.select(tab1)
 
 root.mainloop() #Ejecucion de la GUI
 #***********************************FIN GUI******************************************
