@@ -4,6 +4,7 @@ from code import *
 from m_simplifiedDES import *
 from m_blocks_fill import *
 from m_CBCmode import *
+from m_hash import *
 from ttkthemes import ThemedStyle
 from tkinter import ttk, scrolledtext
 import tkinter as tk
@@ -332,6 +333,53 @@ def bruteForceCBCGUI(encryptedMessage, originalMessage):
         txt1f3tab4.insert(INSERT, "Time exceeded. It wasn't found.")
         result.set("Error.")
 
+#*******************PRACTICA 2 FIN METODOS GUI------------------------------------
+
+#*******************PRACTICA 3 METODOS GUI------------------------------------
+
+def fnOnComputeHash1():
+    inputhash1 = txt1f2tab5.get('1.0', 'end-1c')
+    print(inputhash1)
+    try:
+        checkBinary(inputhash1)
+        h1 = h(inputhash1)
+        print(h1)
+        resulthash1.set(h1)
+    except ValueError as e:
+        messagebox.showerror("Error", e)
+    
+def checkBinary(inputString):
+    if(inputString.count("0") + inputString.count("1") != len(inputString)):
+        raise ValueError("El campo Cadena para obtener hash 1 no esta en binario.")   
+
+def fnOnComputeHash2():
+    inputhash2 = txt2f2tab5.get('1.0', 'end-1c')
+    print(inputhash2)
+    try:
+        checkBinary(inputhash2)
+        h2 = h(inputhash2)
+        print(h2)
+        resulthash2.set(h2)
+    except ValueError as e:
+        messagebox.showerror("Error", e)
+
+def fnOnComputeHash1vsHash2():
+    if(resulthash1.get()==resulthash2.get()):
+        resulthash1vshash2.set("Iguales")
+        resultdifferences.set(howManydifferences(resulthash1.get(),resulthash2.get()))
+    else:
+        resulthash1vshash2.set("Distintos")
+        resultdifferences.set(howManydifferences(resulthash1.get(),resulthash2.get()))
+    
+def howManydifferences(s1,s2):
+    i = 0
+    ndifferences = 0
+    while(i<len(s1)):
+        if(s1[i]!=s2[i]):
+            ndifferences += 1
+        i = i+1
+    return str(ndifferences)
+
 #******************************INICIO GUI******************************************
 
 root = tk.Tk() #ventana principal
@@ -340,7 +388,7 @@ style = ThemedStyle(root) #Aplicacion de estilo a la GUI
 currentTheme = StringVar() 
 currentTheme.set(THEME1) #Aplicacion tema claro
 style.set_theme(currentTheme.get()) 
-root.title("Práctica 2") #titulo ventana principal
+root.title("Práctica 3") #titulo ventana principal
 root.geometry("810x680") #area: largo x ancho
 root.resizable(0,0) #bloqueo de maximizacion o alteracion de las longitudes de la ventana
 
@@ -357,6 +405,7 @@ tab1 = ttk.Frame(tab_control) #Pantalla Cifrar/Descifrar
 tab2 = ttk.Frame(tab_control) #Pantalla Bruteforce
 tab3 = ttk.Frame(tab_control) #Pantalla Cifrar/Descifrar modo CBC
 tab4 = ttk.Frame(tab_control) #Pantalla Fuerza Bruta CBC
+tab5 = ttk.Frame(tab_control) #Pantalla Hash
 
 
 #---------------------------------TAB 1 CIFRAR/DESCIFRAR------------------------------
@@ -814,7 +863,87 @@ txt1f2tab4 = Text(frame2tab4, width=97, height=6)
 txt1f2tab4.name="txtCBCMensaje"
 txt1f2tab4.place(x=0, y=0)
 
-tab_control.select(tab1)
+
+#---------------------------------TAB 5 HASH------------------------------
+
+    #-----Frame 1------------------------------------------------------------------------------
+        #-HASH1
+        #-HASH2
+        #-HASH1 VS HASH2
+    #------------------------------------------------------------------------------------------
+
+tab_control.add(tab5, text='Hash')
+
+frame1tab5 = ttk.Frame(tab5,height=630, width=795, relief="groove") 
+frame1tab5.place(x=5, y=10)
+
+lbl1f1tab5 = ttk.Label(frame1tab5,text="Cadena para obtener hash 1")
+lbl1f1tab5.name="lblMensaje"
+lbl1f1tab5.place(x=5,y=30)
+
+frame2tab5 = ttk.Frame(tab5,height=150, width=780, relief="groove") 
+frame2tab5.place(x=10, y=60)
+
+txt1f2tab5 = scrolledtext.ScrolledText(frame2tab5, width=95, height=16)
+txt1f2tab5.name="txtStringHash1"
+txt1f2tab5.place(x=0, y=0) 
+
+b1btn1f1tab5 = ttk.Button(frame1tab5, text="Calcular Hash 1", command=fnOnComputeHash1)
+b1btn1f1tab5.place(x=5,y=215)
+b1btn1f1tab5.name = "btnComputeHash1"
+
+lbl1f1tab5 = ttk.Label(frame1tab5,text="Cadena para obtener hash 2")
+lbl1f1tab5.name="lblMensaje"
+lbl1f1tab5.place(x=5,y=250)
+
+frame2tab5 = ttk.Frame(tab5,height=150, width=780, relief="groove") 
+frame2tab5.place(x=10, y=280)
+
+txt2f2tab5 = scrolledtext.ScrolledText(frame2tab5, width=95, height=16)
+txt2f2tab5.name="txtStringHash2"
+txt2f2tab5.place(x=0, y=0) 
+
+b1btn1f1tab5 = ttk.Button(frame1tab5, text="Calcular Hash 2", command=fnOnComputeHash2)
+b1btn1f1tab5.place(x=5,y=435)
+b1btn1f1tab5.name = "btnComputeHash2"
+
+b1btn1f1tab5 = ttk.Button(frame1tab5, text="Comparar hash 1 vs hash 2", command=fnOnComputeHash1vsHash2)
+b1btn1f1tab5.place(x=5,y=475)
+b1btn1f1tab5.name = "btnCompareHashes"
+
+lbl4f1tab5 =ttk.Label(frame1tab5,text="HASH 1",font="Arial, 20")
+lbl4f1tab5.place(x=460, y=212)
+
+resulthash1 = StringVar()
+resulthash1.set("")
+txt4f1tab5 = ttk.Entry(frame1tab5, textvariable=resulthash1, width=15, font="Arial 18")
+txt4f1tab5.place(x=570, y=215)
+
+lbl4f1tab5 =ttk.Label(frame1tab5,text="HASH 2",font="Arial, 20")
+lbl4f1tab5.place(x=460, y=432)
+
+resulthash2 = StringVar()
+resulthash2.set("")
+txt4f1tab5 = ttk.Entry(frame1tab5, textvariable=resulthash2, width=15, font="Arial 18")
+txt4f1tab5.place(x=570, y=435)
+
+lbl4f1tab5 =ttk.Label(frame1tab5,text="Resultado",font="Arial, 20")
+lbl4f1tab5.place(x=200, y=530)
+
+resulthash1vshash2 = StringVar()
+resulthash1vshash2.set("")
+txt4f1tab5 = ttk.Entry(frame1tab5, textvariable=resulthash1vshash2, width=15, font="Arial 18")
+txt4f1tab5.place(x=342, y=533)
+
+lbl5f1tab5 =ttk.Label(frame1tab5,text="Variaciones",font="Arial, 20")
+lbl5f1tab5.place(x=190, y=570)
+
+resultdifferences = StringVar()
+resultdifferences.set("")
+txt4f1tab5 = ttk.Entry(frame1tab5, textvariable=resultdifferences, width=15, font="Arial 18")
+txt4f1tab5.place(x=342, y=570)
+
+tab_control.select(tab5)
 
 root.mainloop() #Ejecucion de la GUI
 #***********************************FIN GUI******************************************
