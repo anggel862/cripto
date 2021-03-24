@@ -1,3 +1,34 @@
+# Proyecto Cripto
+Este proyecto consiste en una serie de tres trabajos incrementales y relacionados con la Criptografía realizados dentro de la formación post-universitaria.
+
+## Versiones del proyecto
+1. Aplicación cifrado simétrico DES-simplificado. (v1.0.0)
+2. Aplicación cifrado de bloques CBC. (v2.0.0)
+3. Aplicación función hash. (v3.0.0)
+
+## Contenido de versiones
+### v1.0.0:
+Se trata de una aplicación que implementa un algoritmo de tipo DES simplificado y un algoritmo de fuerza bruta que prueba la debilidad de DES.
+
+Características algoritmo DES-simplificado:
+
+- Número de iteraciones = 8
+- Tamaño en bits del bloque = 12
+- Tamaño en bits de la clave = 9
+
+### v2.0.0:
+En la siguiente versión se ha modificado la implementación del algoritmo de cifrado  un modo de operación de cifrado por bloques: modo CBC. De nuevo, implementamos un procedimiento de fuerza bruta que prueba la fortaleza del cifrado.
+
+
+*Nota*: En esta versión, se ha mejorado la interfaz de usuario con un diseño más actual.
+
+### v3.0.0:
+Para finalizar el proyecto, se ha realizado la implementación de una función hash y unos indicadores para conocer las variaciones que se producen al modificar el valor al que se aplica dicha función.
+
+*Nota*: En esta versión, se ha añadido un tema oscuro que ahora puede ser modificado desde Tema > Cambiar Tema (alternará entre oscuro y claro).
+
+
+<!--
 #Cabeceras
 ---
 
@@ -42,7 +73,7 @@ formato primera forma
 
 # Imagenes
 ---
-![Logo github](https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png)
+--![Logo github](https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png)
 
 # Code Snippets
 ```C++
@@ -110,7 +141,6 @@ Esto es nuestro primer párrafo.
 Esto es nuestro segundo párrafo.
 
 Esto es nuestro tercer párrafo.
-
-
+-->
 
 
