@@ -1,7 +1,7 @@
 # Proyecto Cripto
 Este proyecto consiste en una serie de tres trabajos incrementales y relacionados con la Criptografía realizados dentro de la formación post-universitaria.
 
-## Compilación del proyecto
+## Requerimientos del proyecto
 El proyecto está realizado en Python v3 (no está adaptado para funcionar con Python v2). Emplea los módulos tkinter para implementar interfaces gráficas Tcl/Tk y datetime para realizar cálculos de tiempos.
 
 ## Versiones del proyecto
